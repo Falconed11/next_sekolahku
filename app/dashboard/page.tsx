@@ -17,7 +17,7 @@ export default async function Page() {
 
     </div>
 }
-export async function getAttendeeList() {
+async function getAttendeeList() {
     // Call an external API endpoint to get posts.
     // You can use any data fetching library
     const getCurrentDate = () => {
