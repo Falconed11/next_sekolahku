@@ -3,9 +3,9 @@ import { useState, FormEvent } from "react";
 
 export default function Page() {
     const [id, setId] = useState("");
-    const [history, setHistory] = useState([]);
+    const [history, setHistory]: [string[], Function] = useState([]);
 
-    const updateHistory = (message: String) => {
+    const updateHistory = (message: string) => {
         setHistory(...history, message)
     }
 
