@@ -1,12 +1,11 @@
 "use client";
-import { getApiPath } from "../utils/apiConfig";
 import { getCurrentDate, formatDate, formatTime } from "../utils/date";
 
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
 import React, { useState } from "react";
-import { clientFetch } from "../utils/apiConfig";
+import { useClientFetch } from "../utils/apiConfig";
 import {
   Input,
   Table,
@@ -23,7 +22,7 @@ export default function Laporan() {
   const [startDate, setStartDate] = useState(new Date(currentDate));
   const selectedDate = formatDate(startDate);
 
-  const { data, error, isLoading } = clientFetch(
+  const { data, error, isLoading } = useClientFetch(
     `attendance/?date=${selectedDate}`
   );
 

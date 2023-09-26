@@ -51,13 +51,47 @@ const role = [
 ];
 
 export default function Page() {
+  const { data, error, isLoading } = useClientFetch("user");
   const [filter, setFilter] = useState(new Set([]));
   const [name, setName] = useState("");
-  const { data, error, isLoading } = useClientFetch("user");
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [srcModal, setSrcModal] = useState();
+  const [form, setForm] = useState({ custom_id: "", name: "", role: "" });
   if (error) return <div>failed to load</div>;
   if (isLoading) return <div>loading...</div>;
+
+  const saveButtonPress = async () => {
+    if (form.custom_id == "" || form.name == "" || form.role == "")
+      return alert("Id, Peran, dan Nama harus diisi!");
+    const method = srcModal ? "PUT" : "POST";
+    const res = await fetch(`${apiPath}user`, {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        // 'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: JSON.stringify(form),
+    });
+    const json = await res.json();
+    return alert(json.message);
+  };
+
+  const deleteButtonPress = async (id) => {
+    if (confirm("Hapus user?")) {
+      const res = await fetch(`${apiPath}user`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          // 'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: JSON.stringify({ id }),
+      });
+      if (res.status == 200) return alert("User Berhasil di Hapus.");
+      const json = await res.json();
+      const err = await json.message;
+      return alert(err);
+    }
+  };
 
   let procData = data;
   procData = name
@@ -83,6 +117,7 @@ export default function Page() {
               <span
                 onClick={() => {
                   setSrcModal(data.id);
+                  setForm(procData.filter((row) => row.id == data.id)[0]);
                   return onOpen();
                 }}
                 className="text-lg text-default-400 cursor-pointer active:opacity-50"
@@ -91,7 +126,12 @@ export default function Page() {
               </span>
             </Tooltip>
             <Tooltip color="danger" content="Delete user">
-              <span className="text-lg text-danger cursor-pointer active:opacity-50">
+              <span
+                onClick={() => {
+                  deleteButtonPress(data.id);
+                }}
+                className="text-lg text-danger cursor-pointer active:opacity-50"
+              >
                 <DeleteIcon />
               </span>
             </Tooltip>
@@ -102,8 +142,13 @@ export default function Page() {
     }
   };
 
-  const modalForm = srcModal ? <EditForm id={srcModal} /> : <AddForm />;
+  const modalForm = srcModal ? (
+    <EditForm id={srcModal} procData={procData} form={form} setForm={setForm} />
+  ) : (
+    <AddForm form={form} setForm={setForm} />
+  );
   const modalTitle = srcModal ? "Edit User" : "Tambah User";
+  const btnLabel = srcModal ? "Simpan" : "Tambah";
 
   return (
     <div>
@@ -128,6 +173,7 @@ export default function Page() {
         </Select>
         <Button
           onPress={() => {
+            setForm({ custom_id: "", name: "", role: "" });
             setSrcModal();
             return onOpen();
           }}
@@ -149,10 +195,10 @@ export default function Page() {
               <ModalBody>{modalForm}</ModalBody>
               <ModalFooter>
                 <Button color="danger" variant="light" onPress={onClose}>
-                  Close
+                  Batal
                 </Button>
-                <Button color="primary" onPress={onClose}>
-                  Action
+                <Button color="primary" onPress={saveButtonPress}>
+                  {btnLabel}
                 </Button>
               </ModalFooter>
             </>
@@ -184,8 +230,7 @@ export default function Page() {
   );
 }
 
-const AddForm = () => {
-  const [form, setForm] = useState({ custom_id: "", name: "", role: "" });
+const AddForm = ({ form, setForm }) => {
   const [select, setSelect] = useState(new Set([]));
   return (
     <>
@@ -220,17 +265,9 @@ const AddForm = () => {
   );
 };
 
-const EditForm = ({ id }) => {
+const EditForm = ({ form, setForm }) => {
   // if (src == "add") return <>asd</>;
-  const { data, error, isLoading } = useClientFetch(`user?id=${id}`);
-  if (error) return <div>failed to load</div>;
-  if (isLoading) return <div>loading...</div>;
-  return <RenderForm data={data[0]} />;
-};
-
-const RenderForm = ({ data }) => {
-  const [form, setForm] = useState(data);
-  const [select, setSelect] = useState(new Set([data.role]));
+  const [select, setSelect] = useState(new Set([form.role]));
   return (
     <>
       <Input
